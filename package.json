@@ -64,6 +64,7 @@
   "dependencies": {
     "dom-to-image": "^2.6.0",
     "jspdf": "^2.1.1",
-    "react-contexify": "^4.1.1"
+    "react-contexify": "^4.1.1",
+    "react-icons": "^4.4.0"
   }
 }

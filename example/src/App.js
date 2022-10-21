@@ -19,7 +19,7 @@ function App() {
           imgSrc: sampleImg,
           format: "PNG",
         }}
-        style={{ width: 1000, height: 700 }}
+        // style={{ width: 1000, height: 700 }}
       />
     </div>
   );

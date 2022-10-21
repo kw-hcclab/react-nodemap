@@ -7,9 +7,10 @@ import { flextree } from "d3-flextree";
 import * as d3 from "../../js/d3";
 import JSONData from "../../js/JSONData";
 import History from "../../js/History";
-import ContextMenu, { contextMenu } from "../ContextMenu";
-
+import { ReactComponent as trashcan } from "../../img/trashcan.svg";
 import "./index.scss";
+
+import { HiOutlineTrash } from "react-icons/hi";
 
 class MindMap extends Component {
   constructor(props) {
@@ -17,7 +18,7 @@ class MindMap extends Component {
     this.state = {
       toRecord: true, // 判断是否需要记录mmdata的数据快照
       toUpdate: true, // 判断是否需要更新mmdata
-      dTop: {}, // mmdata中纵坐标最高的数据
+      dTop: {}, // mmdata에서 세로 좌표가 가장 높은 데이터
       mmdata: {}, // 思维导图数据
       root: {}, // 包含位置信息的mmdata
       showNodeContextMenu: false,
@@ -27,7 +28,9 @@ class MindMap extends Component {
       mindmap_svg: {},
       mindmap_g: {},
       dummy: {},
+      trash_svg: {},
       mindmapSvgZoom: () => {},
+      trash_mindmapSvgZoom: () => {},
       easePolyInOut: d3.transition().duration(1000).ease(d3.easePolyInOut),
       link: d3
         .linkHorizontal()
@@ -41,6 +44,7 @@ class MindMap extends Component {
     this.mindmapRef = React.createRef();
     this.svgRef = React.createRef();
     this.contentRef = React.createRef();
+    this.trashRef = React.createRef();
     this.dummyRef = React.createRef();
     this.menuRef = React.createRef();
     this.gpsRef = React.createRef();
@@ -68,6 +72,7 @@ class MindMap extends Component {
     this.reposition();
 
     this.state.mindmap_g.style("opacity", 1);
+    this.state.trash_svg.style("opacity", 1);
     this.forceUpdate();
   }
 
@@ -107,11 +112,14 @@ class MindMap extends Component {
   };
 
   init = () => {
-    // 绑定元素
+    //바인딩 요소
+    //전체
     this.state.mindmap_svg = d3.select(this.svgRef.current);
+    // 마인드맵
     this.state.mindmap_g = d3
       .select(this.contentRef.current)
       .style("opacity", 0);
+    this.state.trash_svg = d3.select(this.trashRef.current).style("opacity", 0);
     this.state.dummy = d3.select(this.dummyRef.current);
     // this.setState({
     //   mindmap_svg: d3.select(this.refs.svg),
@@ -120,7 +128,7 @@ class MindMap extends Component {
     // }, () => {
 
     // })
-    // 绑定事件
+    //바인딩 이벤트
     this.makeKeyboard(this.props.keyboard);
     this.state.mindmap_svg.on("contextmenu", () => {
       d3.event.preventDefault();
@@ -130,6 +138,11 @@ class MindMap extends Component {
       .on("zoom", () => {
         this.state.mindmap_g.attr("transform", d3.event.transform);
       });
+    // this.state.trash_mindmapSvgZoom = this.state.trash_zoom
+    //   .scaleExtent([0.1, 8])
+    //   .on("zoom", () => {
+    //     this.state.trash.attr("transform", d3.event.transform);
+    //   });
     // this.setState({
     //   mindmapSvgZoom: this.state.zoom.scaleExtent([0.1, 8]).on('zoom', () => {
     //     this.state.mindmap_g.attr('transform', d3.event.transform)
@@ -154,7 +167,7 @@ class MindMap extends Component {
     return this.state.history.canRedo;
   };
 
-  // 事件
+  // 사건
   makeKeyboard = (val) => {
     this.state.mindmap_svg.on("keydown", val ? this.svgKeyDown : null);
   };
@@ -212,10 +225,13 @@ class MindMap extends Component {
 
   makeZoom = (val) => {
     const { mindmap_svg, mindmapSvgZoom } = this.state;
+    const { trash_svg, trash_mindmapSvgZoom } = this.state;
     if (val) {
       mindmap_svg.call(mindmapSvgZoom).on("dblclick.zoom", null);
+      trash_svg.call(trash_mindmapSvgZoom).on("dblclick.zoom", null);
     } else {
       mindmap_svg.on(".zoom", null);
+      trash_svg.on(".zoom", null);
     }
   };
 
@@ -243,39 +259,49 @@ class MindMap extends Component {
   }
 
   makeCenter = async () => {
-    // 居中
+    // 가운데정렬
     await d3
       .transition()
       .end()
       .then(() => {
         if (this.contentRef.current) {
+          console.log("마인드맵의 전체 세부구조", this.contentRef.current);
           const div = this.mindmapRef.current;
+          console.log("trash", this.trashRef.current);
           const content = this.contentRef.current.getBBox();
           const { k } = d3.zoomTransform(this.svgRef.current);
-
+          console.log("k", k);
           const x = -(div.offsetWidth - k * content.width) / (2 * k) - 5;
           const y =
             -(div.offsetHeight - k * content.height) / (2 * k) -
             (-this.state.dTop.x - this.foreignY(this.state.dTop));
 
+          const trash_y =
+            -(div.offsetHeight - k * content.height) / (2 * k) +
+            (-this.state.dTop.x - this.foreignY(this.state.dTop));
+          console.log("y", y);
+          console.log("trash_y", trash_y);
           this.state.mindmap_svg.call(this.state.zoom.translateTo, x, y, [
             0,
             0,
           ]);
+          // this.state.mindmap_g.call(this.state.zoom.translateTo, 500, 100, [
+          //   0,
+          //   50,
+          // ]);
         }
       });
   };
 
   fitContent = async () => {
-    // 适应窗口大小
+    // 창 크기에 맞게 조정
     await d3
       .transition()
       .end()
       .then(() => {
         if (this.contentRef.current) {
-          const rect = this.contentRef.current.getBBox();
-          const div = this.mindmapRef.current;
-
+          const rect = this.contentRef.current.getBBox(); //위치정보와 너비정보 저장됨: SVGRect {x: -5, y: -318, width: 480, height: 567}
+          const div = this.mindmapRef.current; //mindmapRef 전체 코드 접근
           const multipleX = div.offsetWidth / rect.width;
           const multipleY = div.offsetHeight / rect.height;
           const multiple = Math.min(multipleX, multipleY) * 0.95;
@@ -469,7 +495,7 @@ class MindMap extends Component {
     const clickedNode = n[i].parentNode;
 
     if (!edit) {
-      // 未在编辑
+      // 편집 중이 아님
       this.selectNode(clickedNode);
 
       const fdiv = d3
@@ -494,7 +520,7 @@ class MindMap extends Component {
         }, 150);
       }).then((flag) => {
         if (!flag && clickedNode.isSameNode(sele)) {
-          // 进入编辑状态
+          // 편집에 들어가기
           this.editNode(clickedNode);
         }
       });
@@ -506,14 +532,14 @@ class MindMap extends Component {
     const edit = document.getElementById("editing");
     const clickedNode = n[i].parentNode;
     if (clickedNode.isSameNode(edit)) {
-      // 正在编辑
+      // 편집 중
       return;
     }
     if (!clickedNode.isSameNode(sele)) {
-      // 选中
+      // 선택
       this.selectNode(clickedNode);
     }
-    // 显示右键菜单
+    // 오른쪽 버튼 메뉴 보이기
     const svgPosition = this.state.mindmap_svg.node().getBoundingClientRect();
     this.setState({
       contextMenuX: d3.event.pageX - svgPosition.x - window.scrollX,
@@ -719,7 +745,8 @@ class MindMap extends Component {
     targetY += parseInt(fObject.getAttribute("x"), 10);
     targetX += parseInt(fObject.getAttribute("y"), 10);
 
-    // 计算others相对a.parent位置的坐标
+    // a.parent 위치에 대한 others의 좌표를 계산하다
+    // 마인드맵 ~
     mindmap_g
       .selectAll("g.node")
       .filter(
@@ -731,14 +758,14 @@ class MindMap extends Component {
         const gNode = n[i];
         const gRect = gNode.getElementsByTagName("foreignObject")[0];
         const rect = {
-          // 其他gRect相对a.parent的坐标，以及gRect的宽高
+          // a.parent에 대한 다른 gRect의 좌표 및 gRect의 너비
           y:
-            parseInt(gRect.getAttribute("x"), 10) + // foreignObject的x轴偏移
+            parseInt(gRect.getAttribute("x"), 10) + // foreignObject의 x축 오프셋
             d.y +
             (d.py ? d.py : 0) -
             (a.parent ? a.parent.y : 0),
           x:
-            parseInt(gRect.getAttribute("y"), 10) + // foreignObject的y轴偏移
+            parseInt(gRect.getAttribute("y"), 10) + // foreignObject의 y축 오프셋
             d.x +
             (d.px ? d.px : 0) -
             (a.parent ? a.parent.x : 0),
@@ -1163,29 +1190,43 @@ class MindMap extends Component {
       <div
         ref={this.mindmapRef}
         id="mindmap"
+        // SVG를 세로로 배치하는 것 부터!
+        // style={[mmStyle, (display = "flex")]}
         style={mmStyle}
-        onContextMenu={(e) => {
-          if (!this.state.showNodeContextMenu) {
-            this.clearSelection();
-            e.preventDefault();
+        // onContextMenu={(e) => {
+        //   if (!this.state.showNodeContextMenu) {
+        //     this.clearSelection();
+        //     e.preventDefault();
 
-            contextMenu.show({
-              id: "menu",
-              event: e,
-              props: {
-                width: 70,
-              },
-            });
-          }
-        }}
+        //     contextMenu.show({
+        //       id: "menu",
+        //       event: e,
+        //       props: {
+        //         width: 70,
+        //       },
+        //     });
+        //   }
+        // }}
       >
         <svg ref={this.svgRef} className={svgClass} tabIndex="0">
-          <g ref={this.contentRef} id="content" />
-          <g ref={this.contentRef} id="content" />
+          {/* 어떻게 해야 위 아래로 배치되고.....  */}
+          {/* <HiOutlineTrash ref={this.trashRef} color="black" size="30" /> */}
+          {/* <g ref={this.trashRef}></g> */}
+          <g ref={this.contentRef}>
+            {/* <src src="./bin.png" ref={this.trashRef} alt="bin" /> */}
+            <HiOutlineTrash
+              id="trash"
+              ref={this.trashRef}
+              color="black"
+              size="50"
+            />
+            {/* <g id="content">
+            
+            </g> */}
+          </g>
         </svg>
-        <h1>123456789</h1>
         <div ref={this.dummyRef} id="dummy" />
-        <ContextMenu
+        {/* <ContextMenu
           id="menu"
           onClick={this.clickMenu}
           loading={() => {
@@ -1198,7 +1239,7 @@ class MindMap extends Component {
               loading: false,
             });
           }}
-        />
+        /> */}
         {this.state.showNodeContextMenu && (
           <div
             ref={this.menuRef}
@@ -1227,7 +1268,6 @@ class MindMap extends Component {
             ))}
           </div>
         )}
-
         {/* <div className="button right-bottom">
           {this.props.gps && (
             <button
