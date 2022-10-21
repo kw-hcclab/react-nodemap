@@ -1,4 +1,7 @@
-$seleColor: rgba($color: blue, $alpha: 0.15);
+$seleColor: rgba(
+  $color: blue,
+  $alpha: 0.15,
+);
 $strokeWidths: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
 
 div#mindmap {
@@ -7,14 +10,14 @@ div#mindmap {
   display: flex;
 
   div.rightClickTrigger {
-    position: absolute; 
-    width: 100%; 
-    height: 100%
+    position: absolute;
+    width: 100%;
+    height: 100%;
   }
 
   div#dummy {
     div {
-      white-space:pre-wrap;
+      white-space: pre-wrap;
       width: max-content;
     }
   }
@@ -22,7 +25,8 @@ div#mindmap {
   svg {
     flex: auto;
     outline: none;
-    background-color: rgb(238, 238, 243);
+    // background-color: rgb(238, 238, 243);
+    background-color: rgb(255, 190, 237);
 
     foreignObject {
       cursor: default;
@@ -34,12 +38,12 @@ div#mindmap {
       &:focus {
         outline: none;
       }
-      
+
       div {
         text-align: left;
         border: 1px solid transparent;
         width: max-content;
-        white-space:pre-wrap;
+        white-space: pre-wrap;
         color: rgb(109, 109, 109);
 
         &:focus {
@@ -49,20 +53,21 @@ div#mindmap {
       }
     }
 
-    g.depth_0.node > foreignObject { 
-      background-color: white;
+    g.depth_0.node > foreignObject {
+      background-color: rgb(146, 116, 255);
+      // padding: 5%;
       border-radius: 5px;
 
       div {
         color: rgb(75, 75, 75);
       }
-    } 
+    }
 
     g.gButton {
       opacity: 0;
       > {
         path {
-          fill: #8685FF;
+          fill: #8685ff;
         }
         rect {
           fill: white;
@@ -79,7 +84,7 @@ div#mindmap {
         }
       }
     }
-    
+
     path {
       fill: none;
       stroke-linecap: round;
@@ -106,10 +111,9 @@ div#mindmap {
   #menu {
     position: absolute;
     border-radius: 4px;
-    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 
-      0px 8px 10px 1px rgba(0, 0, 0, 0.14),
-      0px 3px 14px 2px rgba(0, 0, 0, 0.12);
-    background-color: #FAFAFA;
+    box-shadow: 0px 5px 5px -3px rgba(0, 0, 0, 0.2),
+      0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
+    background-color: #fafafa;
     padding: 4px 0;
 
     &:focus {
@@ -139,10 +143,10 @@ div#mindmap {
       }
     }
   }
-  
+
   div.button {
     position: absolute;
-  
+
     &.right-bottom {
       bottom: 0;
       right: 0;
@@ -195,12 +199,15 @@ div#mindmap {
 
       &.disabled {
         cursor: default;
-        
+
         &:hover::before {
           opacity: 0;
         }
 
-        i { filter: invert(85%) sepia(20%) saturate(0%) hue-rotate(125deg) brightness(86%) contrast(93%); }
+        i {
+          filter: invert(85%) sepia(20%) saturate(0%) hue-rotate(125deg)
+            brightness(86%) contrast(93%);
+        }
       }
 
       // i {
