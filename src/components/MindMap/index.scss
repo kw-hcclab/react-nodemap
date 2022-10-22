@@ -25,8 +25,8 @@ div#mindmap {
   svg {
     flex: auto;
     outline: none;
-    // background-color: rgb(238, 238, 243);
-    background-color: rgb(255, 190, 237);
+    background-color: rgb(241, 241, 241);
+    // background-color: rgb(255, 190, 237);
 
     foreignObject {
       cursor: default;
@@ -54,7 +54,7 @@ div#mindmap {
     }
 
     g.depth_0.node > foreignObject {
-      background-color: rgb(146, 116, 255);
+      background-color: white;
       // padding: 5%;
       border-radius: 5px;
 

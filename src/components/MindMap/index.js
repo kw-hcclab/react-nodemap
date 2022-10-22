@@ -40,6 +40,7 @@ class MindMap extends Component {
       history: new History(),
       selectedElement: null,
       loading: false,
+      sequence: 0,
     };
     this.mindmapRef = React.createRef();
     this.svgRef = React.createRef();
@@ -174,19 +175,20 @@ class MindMap extends Component {
 
   makeNodeAdd = (val) => {
     const fObject = this.state.mindmap_g.selectAll("foreignObject");
-    const gBtn = this.state.mindmap_g.selectAll(".gButton");
+    // const gBtn = this.state.mindmap_g.selectAll(".gButton");
 
     if (val) {
-      const { mouseLeave, mouseEnter, gBtnClick } = this;
+      // const { mouseLeave, mouseEnter, gBtnClick } = this;
+      const { mouseLeave, mouseEnter } = this;
 
       fObject.on("mouseenter", mouseEnter).on("mouseleave", mouseLeave);
-      gBtn
-        .on("mouseenter", mouseEnter)
-        .on("mouseleave", mouseLeave)
-        .on("click", gBtnClick);
+      // gBtn
+      //   .on("mouseenter", mouseEnter)
+      //   .on("mouseleave", mouseLeave)
+      //   .on("click", gBtnClick);
     } else {
       fObject.on("mouseenter", null).on("mouseleave", null);
-      gBtn.on("mouseenter", null).on("mouseleave", null).on("click", null);
+      // gBtn.on("mouseenter", null).on("mouseleave", null).on("click", null);
     }
   };
 
@@ -267,28 +269,25 @@ class MindMap extends Component {
         if (this.contentRef.current) {
           console.log("마인드맵의 전체 세부구조", this.contentRef.current);
           const div = this.mindmapRef.current;
-          console.log("trash", this.trashRef.current);
+          // console.log("trash", this.trashRef.current);
           const content = this.contentRef.current.getBBox();
           const { k } = d3.zoomTransform(this.svgRef.current);
-          console.log("k", k);
           const x = -(div.offsetWidth - k * content.width) / (2 * k) - 5;
           const y =
             -(div.offsetHeight - k * content.height) / (2 * k) -
             (-this.state.dTop.x - this.foreignY(this.state.dTop));
 
-          const trash_y =
-            -(div.offsetHeight - k * content.height) / (2 * k) +
-            (-this.state.dTop.x - this.foreignY(this.state.dTop));
-          console.log("y", y);
-          console.log("trash_y", trash_y);
+          // const trash_y =
+          //   -(div.offsetHeight - k * content.height) / (2 * k) +
+          //   (-this.state.dTop.x - this.foreignY(this.state.dTop));
           this.state.mindmap_svg.call(this.state.zoom.translateTo, x, y, [
             0,
             0,
           ]);
-          // this.state.mindmap_g.call(this.state.zoom.translateTo, 500, 100, [
-          //   0,
-          //   50,
-          // ]);
+          this.state.mindmap_g.call(this.state.zoom.translateTo, 500, 100, [
+            0,
+            50,
+          ]);
         }
       });
   };
@@ -416,11 +415,11 @@ class MindMap extends Component {
     }
   };
 
-  // 节点操作
+  // 노드 조작
   updateNodeName = () => {
-    // 文本编辑完成时
+    // 텍스트 편집이 완료되면
     const editP = document.querySelector("#editing > foreignObject > div");
-    window.getSelection().removeAllRanges(); // 清除选中
+    window.getSelection().removeAllRanges(); // 선택 해제
     const editText = editP.innerText;
     d3.select("g#editing").each((d, i, n) => {
       n[i].removeAttribute("id");
@@ -463,7 +462,7 @@ class MindMap extends Component {
   };
 
   editNew = (newJSON, depth, pNode) => {
-    // 聚焦新节点
+    // 새 노드의 초점 맞추기
     d3.transition()
       .end()
       .then(
@@ -553,20 +552,20 @@ class MindMap extends Component {
     }, 300);
   };
 
-  gBtnClick = (a, i, n) => {
-    // 添加子节点
-    if (n[i].style.opacity === "1") {
-      const newJSON = {
-        name: "新建节点",
-        children: [],
-      };
+  // gBtnClick = (a, i, n) => {
+  //   // 添加子节点
+  //   if (n[i].style.opacity === "1") {
+  //     const newJSON = {
+  //       name: "新建节点",
+  //       children: [],
+  //     };
 
-      const d = d3.select(n[i].parentNode).data()[0];
-      this.add(d.data, newJSON);
-      this.mouseLeave(null, i, n);
-      this.editNew(newJSON, d.depth + 1, n[i].parentNode);
-    }
-  };
+  //     const d = d3.select(n[i].parentNode).data()[0];
+  //     this.add(d.data, newJSON);
+  //     this.mouseLeave(null, i, n);
+  //     this.editNew(newJSON, d.depth + 1, n[i].parentNode);
+  //   }
+  // };
 
   clickNodeMenu = (item) => {
     this.setState({
@@ -828,18 +827,18 @@ class MindMap extends Component {
       return;
     }
     if (Math.abs(subject.px) < root.nodeHeight) {
-      // 平移距离不足以调换兄弟节点顺序时复原
+      // 이동 거리가 형제 노드 순서를 바꿀 만큼 충분하지 않을 때 복원
       dragback(subject, draggedNode);
       return;
     }
-    // 调换兄弟节点顺序
+    // 형제 노드 순서 바꾸기
     draggedParentNode = d3.select(draggedParentNode);
     draggedParentNode.each((d) => {
       const draggedBrotherNodes = draggedParentNode
         .selectAll(`g.depth_${d.depth + 1}`)
         .filter((a, i, n) => !draggedNode.isSameNode(n[i]));
       if (!draggedBrotherNodes.nodes()[0]) {
-        // 无兄弟节点时复原
+        // 형제 노드가 없을 때 복원
         dragback(subject, draggedNode);
         return;
       }
@@ -880,7 +879,7 @@ class MindMap extends Component {
     });
   };
 
-  // 绘制
+  // 제작
   updateMindmap = () => {
     this.tree();
     this.getDTop();
@@ -893,18 +892,73 @@ class MindMap extends Component {
   };
 
   gTransform = (d) => {
-    return `translate(${d.dy},${d.dx})`;
+    // node1 절반은 왼쪽에 배치
+    // 홀수는 왼쪽에 배치?
+    //nodeId 가 0, 00, 01, 000. 001,002
+    console.log(
+      "d.data.nodeId.length",
+      d.data.nodeId.length,
+      "d.data.nodeId[1] % 2",
+      d.data.nodeId[1] % 2
+    );
+
+    // return `translate(${d.dy},${d.dx})`;
+    if (d.data.nodeId === "0") {
+      return `translate(${d.dy},${d.dx})`;
+    } else {
+      if (d.data.nodeId.length == 2) {
+        if (d.data.nodeId[1] % 2 != 0) {
+          // depth 1일때, 내 노드id가 홀수면 +
+          return `translate(${d.dy},${d.dx})`;
+        }
+        // else {
+        //   // depth 1일때, 내 노드id가 짝수면 -
+        // 아무 값도 설정하지 않으면 왼쪽으로 이동함
+        //   return `translate(${-d.dy},${-d.dx})`;
+        // }
+      }
+    }
+    // else if (d.data.nodeId.length == 3) {
+    //   if (d.parent.data.nodeId[1] % 2 == 0) {
+    //     // depth 2일때, 내 부모노드id가 홀수면 +
+    //     return `translate(${d.dy},${d.dx})`;
+    //   } else {
+    //     // depth 2일때, 내 부모노드id가 짝수면 -
+    //     return `translate(${-d.dy},${d.dx})`;
+    //   }
+    // }
+    //  else {
+    //   // return `translate(${d.dy},${d.dx})`;
+    //   console.log(
+    //     "내 노드",
+    //     d.data.nodeId,
+    //     "부모 노드",
+    //     d.parent.data.nodeId
+    //   );
+    // }
+
+    // if (this.state.sequence % 2 == 0) {
+    //   this.setState({ sequence: this.state.sequence + 1 }, () => {
+    //     console.log("짝", this.state.sequence % 2);
+    //     return `translate(${d.dy},${d.dx})`;
+    //   });
+    // } else {
+    //   this.setState({ sequence: this.state.sequence + 1 }, () => {
+    //     console.log("홀", this.state.sequence % 2);
+    //     return `translate(${d.dy},${d.dx})`;
+    //   });
+    // }
   };
 
   foreignY = (d) => {
     return -d.data.size[0] / 2 - 5;
   };
 
-  gBtnTransform = (d) => {
-    return `translate(${d.data.size[1] + 8 - this.props.xSpacing},${
-      d.data.size[0] / 2 - 12
-    })`;
-  };
+  // gBtnTransform = (d) => {
+  //   return `translate(${d.data.size[1] + 8 - this.props.xSpacing},${
+  //     d.data.size[0] / 2 - 12
+  //   })`;
+  // };
 
   pathId = (d) => {
     return `path_${d.data.nodeId}`;
@@ -915,18 +969,21 @@ class MindMap extends Component {
   };
 
   pathColor = (d) => {
+    // path 색 정하기
+    // return "#bdbbbb"
     return d.data.color;
   };
 
   path = (d) => {
     return `${this.state.link({
+      // source:[가로좌표, 세로좌표]
       source: [
         (d.parent ? d.parent.y + d.parent.data.size[1] : 0) -
           d.y -
-          this.props.xSpacing, // 横坐标
-        (d.parent ? d.parent.x + d.parent.data.size[0] / 2 : 0) - d.x, // 纵坐标
+          this.props.xSpacing, // 가로 좌표
+        (d.parent ? d.parent.x + d.parent.data.size[0] / 2 : 0) - d.x, // 세로 좌표
       ],
-      target: [0, d.data.size[0] / 2],
+      target: [0, d.data.size[0] / 2], //평평하게
     })}L${d.data.size[1] - this.props.xSpacing},${d.data.size[0] / 2}`;
   };
 
@@ -960,10 +1017,11 @@ class MindMap extends Component {
       fdivMouseDown,
     } = this;
 
+    // 여기! g만드는 곳"
     const gNode = enter.append("g");
     gNode.attr("class", gClass).attr("transform", gTransform);
 
-    const foreign = gNode
+    const foreign = gNode // 마인드맵 선에서 어느 위치에 있을 것인지
       .append("foreignObject")
       .attr("x", -5)
       .attr("y", foreignY);
@@ -971,10 +1029,11 @@ class MindMap extends Component {
       .append("xhtml:div")
       .attr("contenteditable", false)
       .text((d) => d.data.name);
-    foreignDiv
-      .on("blur", updateNodeName)
-      .on("keydown", divKeyDown)
-      .on("mousedown", fdivMouseDown);
+    // 노드 텍스트 편집
+    // foreignDiv
+    //   .on("blur", updateNodeName)
+    //   .on("keydown", divKeyDown)
+    //   .on("mousedown", fdivMouseDown);
     foreignDiv.each((d, i, n) => {
       // eslint-disable-next-line no-undef
       const observer = new ResizeObserver((l) => {
@@ -990,18 +1049,18 @@ class MindMap extends Component {
       });
       observer.observe(n[i]);
     });
-
-    const gBtn = gNode
-      .append("g")
-      .attr("class", "gButton")
-      .attr("transform", gBtnTransform);
-    gBtn
-      .append("rect")
-      .attr("width", 24)
-      .attr("height", 24)
-      .attr("rx", 3)
-      .attr("ry", 3);
-    gBtn.append("path").attr("d", "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z");
+    // gButton 만들기
+    // const gBtn = gNode
+    //   .append("g")
+    //   .attr("class", "gButton")
+    //   .attr("transform", gBtnTransform);
+    // gBtn
+    //   .append("rect")
+    //   .attr("width", 24)
+    //   .attr("height", 24)
+    //   .attr("rx", 3)
+    //   .attr("ry", 3);
+    // gBtn.append("path").attr("d", "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z");
 
     const enterData = enter.data();
     if (enterData.length) {
@@ -1014,14 +1073,14 @@ class MindMap extends Component {
           .attr("stroke", pathColor)
           .attr("d", path);
       } else if (enterData[0].data.nodeId === "0") {
-        // 根节点
+        // 루트 노드
         foreign.attr("y", (d) => foreignY(d) + d.size[0] / 2);
       }
 
       gNode.each(nest);
     }
 
-    gBtn.raise();
+    // gBtn.raise();
     foreign.raise();
     return gNode;
   };
@@ -1068,11 +1127,11 @@ class MindMap extends Component {
 
       node.each(nest);
 
-      node
-        .selectAll("g.gButton")
-        .filter((d, i, n) => n[i].parentNode === node.node())
-        .attr("transform", gBtnTransform(d))
-        .raise();
+      // node
+      //   .selectAll("g.gButton")
+      //   .filter((d, i, n) => n[i].parentNode === node.node())
+      //   .attr("transform", gBtnTransform(d))
+      //   .raise();
     });
     return update;
   };
@@ -1082,11 +1141,12 @@ class MindMap extends Component {
   };
 
   draw = () => {
-    // 生成svg
+    // svg생성
     const { mindmap_g } = this.state;
     const { appendNode, updateNode, exitNode } = this;
     const d = [this.state.root];
 
+    // 마인드맵 그리기 시작
     mindmap_g
       .selectAll(`g${d[0] ? `.depth_${d[0].depth}.node` : ""}`)
       .data(d)
@@ -1098,7 +1158,7 @@ class MindMap extends Component {
   };
 
   tree = () => {
-    // 数据处理
+    // 데이터 처리
     const { mmdata } = this.state;
     const { ySpacing } = this.props;
 
@@ -1109,10 +1169,11 @@ class MindMap extends Component {
     layout(t);
 
     t.each((a) => {
-      // x纵轴 y横轴
-      // 相对偏移
+      // x 세로축 y 가로축
+      // 상대편향
       a.dx = a.x - (a.parent ? a.parent.x : 0);
       a.dy = a.y - (a.parent ? a.parent.y : 0);
+      a.dx = a.x - (a.parent ? a.parent.x : 0);
 
       if (!a.children) {
         a.children = [];
@@ -1152,7 +1213,7 @@ class MindMap extends Component {
   };
 
   clearSelection = () => {
-    // 清除右键触发的选中单词
+    // 오른쪽 단추로 눌렀을 때 선택한 단어 지우기
     if (document.selection && document.selection.empty) {
       document.selection.empty();
     } else if (window.getSelection) {
@@ -1162,7 +1223,7 @@ class MindMap extends Component {
   };
 
   depthTraverse2 = (d, func) => {
-    // 深度遍历，func每个元素
+    // 깊이, func 각 요소
     for (let index = 0; index < d.length; index++) {
       const dChild = d[index];
       func(dChild);
@@ -1214,12 +1275,12 @@ class MindMap extends Component {
           {/* <g ref={this.trashRef}></g> */}
           <g ref={this.contentRef}>
             {/* <src src="./bin.png" ref={this.trashRef} alt="bin" /> */}
-            <HiOutlineTrash
+            {/* <HiOutlineTrash
               id="trash"
               ref={this.trashRef}
               color="black"
               size="50"
-            />
+            /> */}
             {/* <g id="content">
             
             </g> */}
@@ -1255,7 +1316,7 @@ class MindMap extends Component {
               });
             }}
           >
-            {this.state.nodeContextMenuItems.map((item, index) => (
+            {/* {this.state.nodeContextMenuItems.map((item, index) => (
               <div
                 className="menu-item"
                 key={index}
@@ -1265,7 +1326,7 @@ class MindMap extends Component {
               >
                 {item.title}
               </div>
-            ))}
+            ))} */}
           </div>
         )}
         {/* <div className="button right-bottom">
